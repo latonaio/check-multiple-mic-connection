@@ -15,6 +15,9 @@ type MicInfo struct {
 
 func MicrophoneList() []*MicInfo{
 	list := getAllMicrophoneFromAlsa()
+	if len(list) == 0 {
+		return nil
+	}
 	micList := make([]*MicInfo,len(list))
 	for i,v := range list {
 		micList[i] = parseAlsaMicInfo(v)

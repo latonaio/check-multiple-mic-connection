@@ -27,3 +27,9 @@ func InsertMicrophoneIfNotExist(cardNo,deviceNo int,db *gorm.DB) error {
 		DeviceNo:deviceNo,
 	}).FirstOrCreate(&m).Error
 }
+
+func CheckMicrophoneExists(cardNo,deviceNo int,db *gorm.DB) bool {
+	var cnt int
+	db.Model(&Microphone{}).Where("card_no = ? AND device_no = ?", cardNo,deviceNo).Count(&cnt)
+	return cnt > 0
+}

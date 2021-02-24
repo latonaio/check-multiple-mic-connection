@@ -10,6 +10,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	aion_log "bitbucket.org/latonaio/aion-core/pkg/log"
 )
 
 /*
@@ -36,6 +38,16 @@ func main()  {
 	quitC := make(chan os.Signal, 1)
 	signal.Notify(quitC, syscall.SIGTERM, os.Interrupt)
 
+	err = cmd.NewKanbanClient(ctx)
+	if err != nil {
+		aion_log.Printf("failed to init kanban client. err = %s",err)
+	}
+	err = cmd.SetKanban()
+	if err != nil {
+		aion_log.Printf("failed to set kanban. err = %s",err)
+	}
+
+
 	go watch(ctx,time.Second*5,errCh)
 
 
@@ -43,7 +55,8 @@ func main()  {
 	case err := <-errCh:
 		log.Println(err)
 	case <-quitC:
-		log.Print("stop")
+		aion_log.Print("stop")
+		cmd.KanbanCloseConn()
 		time.Sleep(time.Second*5)
 		cancel()
 	}
@@ -53,7 +66,7 @@ func watch(ctx context.Context, interval time.Duration,errCh chan error) {
 	log.Println("start watch!")
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
-	err := manageMicConn()
+	err := manageMicConn(ctx)
 	if err != nil {
 		errCh <- err
 	}
@@ -62,7 +75,7 @@ func watch(ctx context.Context, interval time.Duration,errCh chan error) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			err =  manageMicConn()
+			err =  manageMicConn(ctx)
 			if err != nil {
 				errCh <- err
 			}
@@ -70,26 +83,39 @@ func watch(ctx context.Context, interval time.Duration,errCh chan error) {
 	}
 }
 
-func manageMicConn() error {
+func manageMicConn(ctx context.Context) error {
 	dbConn := db.GetMysql().GetConn()
 	alsa := cmd.MicrophoneList()
-	log.Printf("alsa %+v",alsa)
+	if alsa == nil {
+		log.Println("no microphone found.")
+		return nil
+	}
 	for _,v := range alsa {
-		log.Println("looping")
-		err := cmd.InsertMicrophoneIfNotExist(v.CardNo,v.DeviceNo,dbConn)
-		if err != nil {
-			return err
-		}
-		err = StartCaptureAudioService()
-		if err != nil {
-			return err
+		// 未接続のマイクの接続が検出された時だけrecordの挿入とpodの立ち上げを行う
+		if !cmd.CheckMicrophoneExists(v.CardNo,v.DeviceNo,dbConn) {
+			log.Printf("new microphone is detected. cardNo=%d,deviceNo=%d",v.CardNo,v.DeviceNo)
+			err := cmd.InsertMicrophoneIfNotExist(v.CardNo,v.DeviceNo,dbConn)
+			if err != nil {
+				return err
+			}
+			err = StartCaptureAudioService(ctx,v.CardNo,v.DeviceNo)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
 
-func StartCaptureAudioService() error {
-	log.Println("Start Microservice")
+func StartCaptureAudioService(ctx context.Context,cardNo,deviceNo int) error {
+	reqData := map[string]interface{}{
+		"card_no":cardNo,
+		"device_no": deviceNo,
+		"connection_key": "microphone",
+	}
+	if err := cmd.WriteKanban(reqData); err != nil {
+		return err
+	}
 	return nil
 }
