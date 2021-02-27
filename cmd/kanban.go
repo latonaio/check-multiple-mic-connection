@@ -40,9 +40,10 @@ func KanbanProcessNum() int {
 	return kanbanClient.GetProcessNumber()
 }
 
-func WriteKanban(data map[string]interface{}) error {
+func WriteKanban(data map[string]interface{},processIndex int) error {
 	metadata := msclient.SetMetadata(data)
-	req,err := msclient.NewOutputData(metadata)
+	pNum := msclient.SetProcessNumber(processIndex)
+	req,err := msclient.NewOutputData(metadata,pNum)
 	if err != nil {
 		return err
 	}

@@ -32,7 +32,12 @@ func main()  {
 		panic(err)
 	}
 	mysql := db.MysqlDB{}
-	mysql.Connect(cfg)
+	mdb := mysql.Connect(cfg)
+	// DB内のマイク接続情報を全て削除して初期化する
+	err = cmd.InitMicStatus(mdb.GetConn())
+	if err != nil {
+		aion_log.Printf("failed to init mic status. err = %s",err)
+	}
 
 	errCh := make(chan error,1)
 	quitC := make(chan os.Signal, 1)
@@ -56,7 +61,10 @@ func main()  {
 		log.Println(err)
 	case <-quitC:
 		aion_log.Print("stop")
-		cmd.KanbanCloseConn()
+		err := cmd.KanbanCloseConn()
+		if err != nil {
+			errCh <- err
+		}
 		time.Sleep(time.Second*5)
 		cancel()
 	}
@@ -66,7 +74,7 @@ func watch(ctx context.Context, interval time.Duration,errCh chan error) {
 	log.Println("start watch!")
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
-	err := manageMicConn(ctx)
+	err := manageMicConn()
 	if err != nil {
 		errCh <- err
 	}
@@ -75,7 +83,7 @@ func watch(ctx context.Context, interval time.Duration,errCh chan error) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			err =  manageMicConn(ctx)
+			err =  manageMicConn()
 			if err != nil {
 				errCh <- err
 			}
@@ -83,14 +91,14 @@ func watch(ctx context.Context, interval time.Duration,errCh chan error) {
 	}
 }
 
-func manageMicConn(ctx context.Context) error {
+func manageMicConn() error {
 	dbConn := db.GetMysql().GetConn()
 	alsa := cmd.MicrophoneList()
 	if alsa == nil {
 		log.Println("no microphone found.")
 		return nil
 	}
-	for _,v := range alsa {
+	for i,v := range alsa {
 		// 未接続のマイクの接続が検出された時だけrecordの挿入とpodの立ち上げを行う
 		if !cmd.CheckMicrophoneExists(v.CardNo,v.DeviceNo,dbConn) {
 			log.Printf("new microphone is detected. cardNo=%d,deviceNo=%d",v.CardNo,v.DeviceNo)
@@ -98,7 +106,7 @@ func manageMicConn(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
-			err = StartCaptureAudioService(ctx,v.CardNo,v.DeviceNo)
+			err = StartCaptureAudioService(v.CardNo,v.DeviceNo,i+1)
 			if err != nil {
 				return err
 			}
@@ -108,13 +116,12 @@ func manageMicConn(ctx context.Context) error {
 }
 
 
-func StartCaptureAudioService(ctx context.Context,cardNo,deviceNo int) error {
+func StartCaptureAudioService(cardNo,deviceNo,order int) error {
 	reqData := map[string]interface{}{
 		"card_no":cardNo,
 		"device_no": deviceNo,
-		"connection_key": "microphone",
 	}
-	if err := cmd.WriteKanban(reqData); err != nil {
+	if err := cmd.WriteKanban(reqData,order); err != nil {
 		return err
 	}
 	return nil

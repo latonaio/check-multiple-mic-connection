@@ -33,3 +33,7 @@ func CheckMicrophoneExists(cardNo,deviceNo int,db *gorm.DB) bool {
 	db.Model(&Microphone{}).Where("card_no = ? AND device_no = ?", cardNo,deviceNo).Count(&cnt)
 	return cnt > 0
 }
+
+func InitMicStatus(db *gorm.DB) error {
+	return db.Delete(&Microphone{}).Error
+}
