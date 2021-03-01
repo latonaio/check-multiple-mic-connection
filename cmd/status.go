@@ -5,7 +5,7 @@ import "github.com/jinzhu/gorm"
 type Microphone struct {
 	CardNo int
 	DeviceNo int
-	ManagerPod string
+	AvailableFlg bool
 }
 
 func (m *Microphone)InsertMicrophone(db *gorm.DB) error {
