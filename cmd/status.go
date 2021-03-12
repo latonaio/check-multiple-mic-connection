@@ -2,35 +2,44 @@ package cmd
 
 import "github.com/jinzhu/gorm"
 
+// TODO 増えそうならenumに
+const (
+	STANDBY = "standby"
+	ACTIVE  = "active"
+	DISABLE = "disable"
+)
+
 type Microphone struct {
-	CardNo int
-	DeviceNo int
-	AvailableFlg bool
+	CardNo               int
+	DeviceNo             int
+	Status               string
+	ManagerPodProcessNum int
 }
 
-func (m *Microphone)InsertMicrophone(db *gorm.DB) error {
+func (m *Microphone) InsertMicrophone(db *gorm.DB) error {
 	return db.Create(&m).Error
 }
 
-func GetAllMicrophones(db *gorm.DB) ([]*Microphone,error) {
+func GetAllMicrophones(db *gorm.DB) ([]*Microphone, error) {
 	microphones := []*Microphone{}
 	if err := db.Find(&microphones).Error; err != nil {
-		return nil,err
+		return nil, err
 	}
-	return microphones,nil
+	return microphones, nil
 }
 
-func InsertMicrophoneIfNotExist(cardNo,deviceNo int,db *gorm.DB) error {
+func InsertMicrophoneIfNotExist(cardNo, deviceNo int, db *gorm.DB) error {
 	m := &Microphone{}
-	return db.Where("card_no = ? AND device_no = ?", cardNo,deviceNo).Assign(&Microphone{
-		CardNo: cardNo,
-		DeviceNo:deviceNo,
+	return db.Where("card_no = ? AND device_no = ?", cardNo, deviceNo).Assign(&Microphone{
+		CardNo:   cardNo,
+		DeviceNo: deviceNo,
+		Status:   STANDBY,
 	}).FirstOrCreate(&m).Error
 }
 
-func CheckMicrophoneExists(cardNo,deviceNo int,db *gorm.DB) bool {
+func CheckMicrophoneExists(cardNo, deviceNo int, db *gorm.DB) bool {
 	var cnt int
-	db.Model(&Microphone{}).Where("card_no = ? AND device_no = ?", cardNo,deviceNo).Count(&cnt)
+	db.Model(&Microphone{}).Where("card_no = ? AND device_no = ?", cardNo, deviceNo).Count(&cnt)
 	return cnt > 0
 }
 

@@ -6,17 +6,19 @@ import (
 	"log"
 	"sync"
 )
+
 const msName = "noise-inspection-event-controller"
+
 var (
 	client msclient.MicroserviceClient
-	once sync.Once
+	once   sync.Once
 )
 
 func InitKanbanClient(ctx context.Context) error {
 	var err error
 	once.Do(func() {
-		client,err = msclient.NewKanbanClient(ctx)
-		log.Printf("%+v",client)
+		client, err = msclient.NewKanbanClient(ctx)
+		log.Printf("%+v", client)
 	})
 
 	return nil
@@ -28,7 +30,7 @@ func CloseKanban() error {
 
 func WriteKanban(data map[string]interface{}) error {
 	metadata := msclient.SetMetadata(data)
-	req,err := msclient.NewOutputData(metadata)
+	req, err := msclient.NewOutputData(metadata)
 	if err != nil {
 		return err
 	}
@@ -39,7 +41,6 @@ func WriteKanban(data map[string]interface{}) error {
 	return nil
 }
 
-func GetKanbanCH() (chan *msclient.WrapKanban,error){
-	return client.GetKanbanCh(msName,client.GetProcessNumber())
+func GetKanbanCH() (chan *msclient.WrapKanban, error) {
+	return client.GetKanbanCh(msName, client.GetProcessNumber())
 }
-

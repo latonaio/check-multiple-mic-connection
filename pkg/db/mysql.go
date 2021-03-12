@@ -42,7 +42,6 @@ func (md *MysqlDB) Close() error {
 	return md.conn.Close()
 }
 
-func GetMysql() *MysqlDB{
+func GetMysql() *MysqlDB {
 	return mysql
 }
-

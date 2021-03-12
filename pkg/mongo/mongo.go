@@ -1,6 +1,5 @@
 package mongo
 
-
 import (
 	"context"
 	"fmt"
@@ -72,7 +71,7 @@ func (c *MongoClient) InsertOne(ctx context.Context, document Document) error {
 	return nil
 }
 
-func CreateDoc(msg string) Document{
+func CreateDoc(msg string) Document {
 	return Document{
 		msg: msg,
 	}

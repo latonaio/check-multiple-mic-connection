@@ -15,7 +15,7 @@ const msName = "check-multiple-mic-connection"
 func NewKanbanClient(ctx context.Context) error {
 	var err error
 	once.Do(func() {
-		kanbanClient,err = msclient.NewKanbanClient(ctx)
+		kanbanClient, err = msclient.NewKanbanClient(ctx)
 	})
 	if err != nil {
 		return err
@@ -29,7 +29,7 @@ func KanbanCloseConn() error {
 }
 
 func SetKanban() error {
-	_,err := kanbanClient.SetKanban(msName,KanbanProcessNum())
+	_, err := kanbanClient.SetKanban(msName, KanbanProcessNum())
 	if err != nil {
 		return err
 	}
@@ -40,10 +40,11 @@ func KanbanProcessNum() int {
 	return kanbanClient.GetProcessNumber()
 }
 
-func WriteKanban(data map[string]interface{},processIndex int) error {
+func WriteKanban(data map[string]interface{}, processIndex int, connectionKey string) error {
 	metadata := msclient.SetMetadata(data)
+	connkey := msclient.SetConnectionKey(connectionKey)
 	pNum := msclient.SetProcessNumber(processIndex)
-	req,err := msclient.NewOutputData(metadata,pNum)
+	req, err := msclient.NewOutputData(metadata, pNum, connkey)
 	if err != nil {
 		return err
 	}
