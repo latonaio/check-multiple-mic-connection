@@ -1,6 +1,8 @@
 package cmd
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+)
 
 // TODO 増えそうならenumに
 const (
@@ -28,13 +30,12 @@ func GetAllMicrophones(db *gorm.DB) ([]*Microphone, error) {
 	return microphones, nil
 }
 
-func InsertMicrophoneIfNotExist(cardNo, deviceNo int, db *gorm.DB) error {
-	m := &Microphone{}
-	return db.Where("card_no = ? AND device_no = ?", cardNo, deviceNo).Assign(&Microphone{
+func InsertMicrophone(cardNo, deviceNo int, db *gorm.DB) error {
+	return db.Create(&Microphone{
 		CardNo:   cardNo,
 		DeviceNo: deviceNo,
 		Status:   STANDBY,
-	}).FirstOrCreate(&m).Error
+	}).Error
 }
 
 func CheckMicrophoneExists(cardNo, deviceNo int, db *gorm.DB) bool {
@@ -43,6 +44,23 @@ func CheckMicrophoneExists(cardNo, deviceNo int, db *gorm.DB) bool {
 	return cnt > 0
 }
 
+func GetDisableMicrophone( db *gorm.DB) []*Microphone {
+	mics := []*Microphone{}
+	db.Where("status = active").Find(&mics)
+
+	return mics
+}
+
+func GetMicByCardNoAndDevNo(cardNo, deviceNo int, db *gorm.DB) (*Microphone,error) {
+	m := &Microphone{}
+	err := db.Where("card_no = ? AND device_no = ?", cardNo, deviceNo).First(&m).Error
+	return m,err
+}
+
 func InitMicStatus(db *gorm.DB) error {
 	return db.Delete(&Microphone{}).Error
+}
+
+func (m *Microphone) UpdateStatus(status string,db *gorm.DB) error {
+	return db.Model(&Microphone{}).Where("card_no = ? AND device_no = ?", m.CardNo, m.DeviceNo).Update("status", status).Error
 }
