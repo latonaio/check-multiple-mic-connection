@@ -54,7 +54,7 @@ loop:
 		select {
 		case err := <-errCh:
 			log.Println(err)
-			break
+			break loop
 		case q := <-quitC:
 			aion_log.Print("stop")
 			err := cmd.KanbanCloseConn()

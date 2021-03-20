@@ -46,7 +46,7 @@ func CheckMicrophoneExists(cardNo, deviceNo int, db *gorm.DB) bool {
 
 func GetDisableMicrophone( db *gorm.DB) []*Microphone {
 	mics := []*Microphone{}
-	db.Where("status = active").Find(&mics)
+	db.Where("status = ?", ACTIVE).Find(&mics)
 
 	return mics
 }

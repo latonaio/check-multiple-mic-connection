@@ -30,7 +30,7 @@ func getAllMicrophoneFromAlsa() []string {
 		[]string{"grep", "Microphone"},
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	res := strings.Split(string(out), "\n")
 	return res[:len(res)-1]
