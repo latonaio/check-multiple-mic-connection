@@ -164,12 +164,13 @@ func manageMicConn() error {
 			}
 		}
 
-		log.Printf("start capture audio,%v,%v,%v",v.CardNo, v.DeviceNo, pNum)
-		err = StartCaptureAudioService(v.CardNo, v.DeviceNo, pNum)
-		if err != nil {
-			return err
+		if !statusProcessList[pNum] {
+			err = StartCaptureAudioService(v.CardNo, v.DeviceNo, pNum)
+			if err != nil {
+				return err
+			}
+			statusProcessList[pNum] = true
 		}
-		statusProcessList[pNum] = true
 	}
 	return nil
 }
