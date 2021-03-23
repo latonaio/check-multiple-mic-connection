@@ -164,7 +164,7 @@ func manageMicConn() error {
 			}
 		}
 
-		if !statusProcessList[pNum] {
+		if pNum != 0 && !statusProcessList[pNum] {
 			err = StartCaptureAudioService(v.CardNo, v.DeviceNo, pNum)
 			if err != nil {
 				return err
