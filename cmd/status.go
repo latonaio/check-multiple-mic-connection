@@ -44,23 +44,23 @@ func CheckMicrophoneExists(cardNo, deviceNo int, db *gorm.DB) bool {
 	return cnt > 0
 }
 
-func GetDisableMicrophone( db *gorm.DB) []*Microphone {
+func GetDisableMicrophone(db *gorm.DB) []*Microphone {
 	mics := []*Microphone{}
 	db.Where("status = ?", ACTIVE).Find(&mics)
 
 	return mics
 }
 
-func GetMicByCardNoAndDevNo(cardNo, deviceNo int, db *gorm.DB) (*Microphone,error) {
+func GetMicByCardNoAndDevNo(cardNo, deviceNo int, db *gorm.DB) (*Microphone, error) {
 	m := &Microphone{}
 	err := db.Where("card_no = ? AND device_no = ?", cardNo, deviceNo).First(&m).Error
-	return m,err
+	return m, err
 }
 
 func InitMicStatus(db *gorm.DB) error {
 	return db.Delete(&Microphone{}).Error
 }
 
-func (m *Microphone) UpdateStatus(status string,db *gorm.DB) error {
+func (m *Microphone) UpdateStatus(status string, db *gorm.DB) error {
 	return db.Model(&Microphone{}).Where("card_no = ? AND device_no = ?", m.CardNo, m.DeviceNo).Update("status", status).Error
 }

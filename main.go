@@ -116,13 +116,13 @@ func manageMicConn() error {
 			}
 		}
 	}
-	log.Printf("check disconnected mic complete. delete list is %+v",deleteMic)
-	log.Printf("statusProcessList is %+v",statusProcessList)
+	log.Printf("check disconnected mic complete. delete list is %+v", deleteMic)
+	log.Printf("statusProcessList is %+v", statusProcessList)
 	for _, v := range deleteMic {
 		if v == nil {
 			continue
 		}
-		err := v.UpdateStatus(cmd.DISABLE,dbConn)
+		err := v.UpdateStatus(cmd.DISABLE, dbConn)
 		if err != nil {
 			return err
 		}
@@ -157,7 +157,7 @@ func manageMicConn() error {
 			}
 			if m.Status == cmd.DISABLE {
 				pNum = m.ManagerPodProcessNum
-				err := m.UpdateStatus(cmd.STANDBY,dbConn)
+				err := m.UpdateStatus(cmd.STANDBY, dbConn)
 				if err != nil {
 					return err
 				}
