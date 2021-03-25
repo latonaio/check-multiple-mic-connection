@@ -1,3 +1,4 @@
+# syntax = docker/dockerfile:experimental
 FROM golang:1.15.2 as builder
 
 ENV GO111MODULE on
